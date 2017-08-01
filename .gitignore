@@ -1,0 +1,7 @@
+bin/
+pkg/
+/src/github.com/
+/src/golang.org/
+/src/italk_admin/
+/src/sourcegraph.com/
+*.exe

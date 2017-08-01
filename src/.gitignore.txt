@@ -1,4 +1,0 @@
-github.com/
-golang.org/
-italk_admin/
-sourcegraph.com/

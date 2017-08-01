@@ -1,4 +1,4 @@
-/github.com
-/golang.org
-/italk_admin
-/sourcegraph.com
+github.com/
+golang.org/
+italk_admin/
+sourcegraph.com/

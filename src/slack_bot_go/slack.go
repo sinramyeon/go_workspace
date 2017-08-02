@@ -20,8 +20,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"sync/atomic"
 
+	"github.com/parnurzeal/gorequest"
 	"golang.org/x/net/websocket"
 )
 
@@ -96,10 +96,27 @@ func postMessage(ws *websocket.Conn, m Message) error {
 	return websocket.JSON.Send(ws, m)
 }
 */
+/*
 func postMessage(ws *websocket.Conn, m Message, s []string) error {
 
 	m.Id = atomic.AddUint64(&counter, 1)
-	return websocket.JSON.Send(ws, s)
+	m.
+
+	return websocket.JSON.Send(ws, m)
+}
+*/
+
+// gorequest 이용
+
+func useRequest(m Message) {
+
+	request := gorequest.New()
+	// websocket 대신 gorequest로 바꿔써야지..
+	resp, body, errs := request.Post("주소..").
+		Set("파라미터", "값").
+		Send(`{"JSON":"값", "json":"값"}`).
+		End()
+
 }
 
 // 슬랙 연결

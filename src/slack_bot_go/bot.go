@@ -36,7 +36,7 @@ func main() {
 			//"text" : "Test"
 			//}`)
 
-			postMessage(ws, m)
+			//postMessage(ws, m)
 
 		}
 
@@ -48,7 +48,7 @@ func main() {
 
 			m.Text = "현재 " + m.Text + " 크롤링 중....\n" + "http://www.naver.com"
 
-			postMessage(ws, m, OkkyScrape())
+			//postMessage(ws, m, OkkyScrape())
 			//postMessage(ws, m)
 
 		}
@@ -60,7 +60,7 @@ func main() {
 			fmt.Println("GITHUB TRENDING NOW")
 
 			m.Text = "현재 " + m.Text + " 크롤링 중....\n" + "http://www.naver.com"
-			postMessage(ws, m)
+			//postMessage(ws, m)
 
 		}
 
@@ -71,7 +71,7 @@ func main() {
 			fmt.Println("SNS 구경하기")
 
 			m.Text = "현재 " + m.Text + " 크롤링 중....\n" + "http://www.naver.com"
-			postMessage(ws, m)
+			//postMessage(ws, m)
 
 		}
 
@@ -82,13 +82,13 @@ func main() {
 				// looks good, get the quote and reply with the result
 				go func(m Message) {
 					m.Text = getQuote(parts[2])
-					postMessage(ws, m)
+					//postMessage(ws, m)
 				}(m)
 				// NOTE: the Message object is copied, this is intentional
 			} else {
 				// huh?
 				m.Text = fmt.Sprintf("sorry, that does not compute\n")
-				postMessage(ws, m)
+				//postMessage(ws, m)
 			}
 		}
 

@@ -35,6 +35,7 @@ func main() {
 	// 연결 오류가 났을 때 panic / recover 용 defer함수 만들기
 	// 기타 panic 날법해 보이는 애들 처리
 	// 유저 메시지 입력 외에도 이벤트 만들만한 것 생각해 보기...
+	// json 좀 한방에 처리하는 코드로 정리...(너무드러움)
 
 	// 1. 설정
 	var env envConfig
@@ -130,6 +131,7 @@ Loop:
 
 				// https://ngrok.com/ 으로 연결하던 서버를 통해 slack에서 보내는 메시지를 받아와야 한다고 함
 				// https://github.com/nlopes/slack/blob/master/attachments.go
+				// 이 작업은 서버 연결 후 하는것이 좋겠군...
 
 				// 어디 기사사이트로 할지 아직 못정해서 안만듦.
 				// 나. 기사, 뉴스, 소식 입력 시

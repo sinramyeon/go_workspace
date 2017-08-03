@@ -8,6 +8,23 @@ http://www.popit.kr
 https://github.com/mmcdole/gofeed
 */
 
+/*
+기술블로그 모음
+
+네이버 http://d2.naver.com/helloworld
+드라마앤컴패니 http://blog.dramancompany.com/category/develop/
+라인 https://engineering.linecorp.com/ko
+티몬 http://tmondev.blog.me/
+스포카 https://spoqa.github.io/
+우아한형제들 http://woowabros.github.io/
+카카오 http://tech.kakao.com/
+레진 http://tech.lezhin.com/
+리디북스 https://www.ridicorp.com/blog/
+기술뉴스 https://blog.outsider.ne.kr/
+이상한모임 http://blog.weirdx.io/
+
+*/
+
 //// 웹 크롤링
 /*
 https://github.com/PuerkitoBio/goquery

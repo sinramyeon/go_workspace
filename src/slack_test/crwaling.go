@@ -183,6 +183,38 @@ func GoScrape() map[string]string {
 	return githublist
 }
 
+// IT 뉴스 찾기
+func NewsScrape() map[string]string {
+
+	doc, err := goquery.NewDocument("http://www.itworld.co.kr/")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	newslist := make(map[string]string)
+
+	var forLoop int = 0
+
+	doc.Find(".cio_summary").EachWithBreak(func(i int, s *goquery.Selection) bool {
+
+		if forLoop > 4 {
+			return false
+		} else {
+			title := s.Find("ul li a").Text()
+			strings.TrimSpace(title)
+			url := s.Find("ul li a").AttrOr("href", "없음")
+			strings.TrimSpace(url)
+			strings.TrimLeft(url, " ")
+
+			newslist[title] = url
+			forLoop++
+			return true
+		}
+	})
+	return newslist
+}
+
 // 문자열 슬라이싱용(귀찮음)
 func between(value string, a string, b string) string {
 	// Get substring between two strings.

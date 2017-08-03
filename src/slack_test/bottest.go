@@ -32,8 +32,6 @@ type envConfig struct {
 
 func main() {
 
-	GoScrape()
-
 	// 연결 오류가 났을 때 panic / recover 용 defer함수 만들기
 	// 기타 panic 날법해 보이는 애들 처리
 	// 유저 메시지 입력 외에도 이벤트 만들만한 것 생각해 보기...
@@ -130,39 +128,42 @@ Loop:
 
 				}
 
-				// 이걸 보낸 후 유저가 클릭하는 걸 detect하는 방법을 강구해야함
-				// 그거에 따라 밑에 것들을 함수화 해서 실행하면 될텐데...
-				// *slack.AttachmentAction 류라고 생각했는데...반응이 없음. 테스트 필요.
+				// https://ngrok.com/ 으로 연결하던 서버를 통해 slack에서 보내는 메시지를 받아와야 한다고 함
 				// https://github.com/nlopes/slack/blob/master/attachments.go
 
 				// 어디 기사사이트로 할지 아직 못정해서 안만듦.
-
 				// 나. 기사, 뉴스, 소식 입력 시
 
-				if strings.Contains(ev.Text, "기사") || strings.Contains(ev.Text, "뉴스") || strings.Contains(ev.Text, "소식") || strings.Contains(ev.Text, "NEWS") || strings.Contains(ev.Text, "news") {
+				if ev.User != info.User.ID && strings.Contains(ev.Text, "기사") || strings.Contains(ev.Text, "뉴스") || strings.Contains(ev.Text, "소식") || strings.Contains(ev.Text, "NEWS") || strings.Contains(ev.Text, "news") {
 
-					attachment := slack.Attachment{
+					rtm.SendMessage(rtm.NewOutgoingMessage("신문의 IT 섹션을 펼치는 중... :camera_with_flash:", ev.Channel))
 
-						Pretext: "IT 뉴스 :camera_with_flash:  ",
-						Color:   "#104293",
-						Title:   "기사 제목",
-						//TitleLink: "http://www.naver.com",
-						Text: "http://www.naver.com",
+					m := NewsScrape()
+
+					for k, v := range m {
+
+						attachment := slack.Attachment{
+
+							Color: "#cc1512",
+							Title: k,
+							Text:  v,
+						}
+
+						params := slack.PostMessageParameters{
+
+							Attachments: []slack.Attachment{
+								attachment,
+							},
+						}
+
+						rtm.PostMessage(env.channelId, "", params)
+
 					}
-
-					params := slack.PostMessageParameters{
-
-						Attachments: []slack.Attachment{
-							attachment,
-						},
-					}
-
-					rtm.PostMessage(env.channelId, "", params)
 				}
 
 				// 다. OKKY 입력 시
 
-				if strings.Contains(ev.Text, "OKKY") || strings.Contains(ev.Text, "okky") || strings.Contains(ev.Text, "오키") {
+				if ev.User != info.User.ID && strings.Contains(ev.Text, "OKKY") || strings.Contains(ev.Text, "okky") || strings.Contains(ev.Text, "오키") {
 
 					rtm.SendMessage(rtm.NewOutgoingMessage("okky 기술 글들을 긁어오는 중입니다... :desktop_computer:", ev.Channel))
 
@@ -192,7 +193,7 @@ Loop:
 
 				// 라. 블로그 입력 시(RSS)
 
-				if strings.Contains(ev.Text, "blog") || strings.Contains(ev.Text, "BLOG") || strings.Contains(ev.Text, "블로그") {
+				if ev.User != info.User.ID && strings.Contains(ev.Text, "blog") || strings.Contains(ev.Text, "BLOG") || strings.Contains(ev.Text, "블로그") {
 
 					rtm.SendMessage(rtm.NewOutgoingMessage("기술 블로그 구경 중입니다... :red_car:", ev.Channel))
 
@@ -222,7 +223,7 @@ Loop:
 
 				// 마. 트위터 입력 시
 
-				if strings.Contains(ev.Text, "트윗") || strings.Contains(ev.Text, "트위터") {
+				if ev.User != info.User.ID && strings.Contains(ev.Text, "트윗") || strings.Contains(ev.Text, "트위터") {
 
 					rtm.SendMessage(rtm.NewOutgoingMessage("트위터를 돌아보는 중입니다... :bird:", ev.Channel))
 
@@ -250,7 +251,7 @@ Loop:
 
 				// 바. 깃허브 입력 시(최신유행 GO 오픈소스 찾기)
 
-				if strings.Contains(ev.Text, "github") || strings.Contains(ev.Text, "GITHUB") || strings.Contains(ev.Text, "깃허브") || strings.Contains(ev.Text, "깃헙") {
+				if ev.User != info.User.ID && strings.Contains(ev.Text, "github") || strings.Contains(ev.Text, "GITHUB") || strings.Contains(ev.Text, "깃허브") || strings.Contains(ev.Text, "깃헙") {
 
 					rtm.SendMessage(rtm.NewOutgoingMessage("최신유행 GO 오픈소스를 공부하러 가는 중... :lollipop: ", ev.Channel))
 
@@ -283,6 +284,18 @@ Loop:
 				}
 
 			case *slack.RTMError:
+			/*고통의 흔적들
+			case *slack.AttachmentAction:
+				fmt.Println("AttachmentAction")
+			case *slack.AttachmentActionCallback:
+				fmt.Println("AttachmentActionCallback")
+			case *slack.AttachmentActionOption:
+				fmt.Println("AttachmentActionOption")
+			case *slack.AttachmentActionOptionGroup:
+				fmt.Println("AttachmentActionOptionGroup")
+			case *slack.AttachmentField:
+				fmt.Println("엥")
+			*/
 
 			case *slack.InvalidAuthEvent:
 				break Loop

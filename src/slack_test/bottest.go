@@ -32,6 +32,8 @@ type envConfig struct {
 
 func main() {
 
+	JSONParse()
+
 	// 연결 오류가 났을 때 panic / recover 용 defer함수 만들기
 	// 기타 panic 날법해 보이는 애들 처리
 	// 유저 메시지 입력 외에도 이벤트 만들만한 것 생각해 보기...

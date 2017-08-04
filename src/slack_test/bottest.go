@@ -395,7 +395,7 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 	}
 
 	// 봇에게 한 멘션이 아닐 때
-	if !(strings.HasPrefix(receivedMsg, fmt.Sprintf("<@%s> ", "U6H0KD41X"))) {
+	if !(strings.HasPrefix(receivedMsg, fmt.Sprintf("<@%s> ", "it_trend_go3"))) {
 
 		// 봇이 한 말이면 무시하자!
 		if strings.Contains(ev.Msg.BotID, "bot") {

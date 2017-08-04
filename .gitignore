@@ -5,3 +5,4 @@ pkg/
 /src/italk_admin/
 /src/sourcegraph.com/
 *.exe
+*env.go

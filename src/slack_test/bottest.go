@@ -182,7 +182,7 @@ Loop:
 
 				// 다. OKKY 입력 시
 
-				if ev.User != info.User.ID && strings.Contains(ev.Text, "OKKY") || strings.Contains(ev.Text, "okky") || strings.Contains(ev.Text, "오키") {
+				if ev.User != info.User.ID && strings.Contains(ev.Text, "OKKY") || strings.Contains(ev.Text, "okky") || strings.Contains(ev.Text, "오키") || strings.Contains(ev.Text, "옼희") {
 
 					rtm.SendMessage(rtm.NewOutgoingMessage("okky 기술 글들을 긁어오는 중입니다... :desktop_computer:", ev.Channel))
 

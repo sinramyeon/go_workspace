@@ -7,6 +7,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/nlopes/slack"
@@ -29,10 +30,21 @@ type envConfig struct {
 	botId     string
 	channelId string
 }
+type twitterConfig struct {
+	confKey     string
+	confSecret  string
+	tokenKey    string
+	tokenSecret string
+}
 
 func main() {
 
-	JSONParse()
+	defer func() {
+		if err := recover(); err != nil {
+			log.Fatal(err)
+			return
+		}
+	}()
 
 	// 연결 오류가 났을 때 panic / recover 용 defer함수 만들기
 	// 기타 panic 날법해 보이는 애들 처리
@@ -43,6 +55,9 @@ func main() {
 	var env envConfig
 	env = envconfig(env)
 	api := slack.New(env.botToken)
+
+	var tweetenv twitterConfig
+	tweetenv = twitterconfig(tweetenv)
 
 	// DEBUG설정 - 개발시에만 켜주세요
 	//api.SetDebug(true)
@@ -201,13 +216,13 @@ Loop:
 
 					rtm.SendMessage(rtm.NewOutgoingMessage("기술 블로그 구경 중입니다... :red_car:", ev.Channel))
 
-					m := OkkyScrape()
+					m := RssScrape()
 
 					for k, v := range m {
 
 						attachment := slack.Attachment{
 
-							Color: "#104293",
+							Color: "#2a4f2e",
 							Title: k,
 							Text:  v,
 						}
@@ -231,7 +246,7 @@ Loop:
 
 					rtm.SendMessage(rtm.NewOutgoingMessage("트위터를 돌아보는 중입니다... :bird:", ev.Channel))
 
-					m := TwitterScrape()
+					m := TwitterScrape(tweetenv)
 
 					for k, v := range m {
 

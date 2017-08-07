@@ -94,12 +94,9 @@ func _main(args []string) int {
 	// 2. 메시지 받기
 
 	go slackListener.ListenAndResponse(tweetenv)
-
 	go slackListener.PostByTime()
 
-	//rtm := api.NewRTM()
-	//go rtm.ManageConnection()
-
+	// 서버를 생성하면 그 주소로 설정하면 됩니다(버튼 클릭 액션을 받아올 때 사용)
 	http.Handle("/interaction", interactionHandler{
 		verificationToken: env.VerificationToken,
 	})
@@ -291,7 +288,6 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 			id := receivedMsg[strings.Index(receivedMsg, " ")+1:]
 			strings.TrimSpace(id)
 
-			log.Print(id)
 			// 사용자가 커밋을 하지 않았을 경우
 			if !getGitCommit(id) {
 
@@ -392,6 +388,8 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 func (s *SlackListener) PostByTime() {
 
-	fmt.Println("시간별 전송용")
+	for {
+		// 정시 알림을 보내고 싶다....
+	}
 
 }

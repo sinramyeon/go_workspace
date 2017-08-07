@@ -87,13 +87,15 @@ func _main(args []string) int {
 	//로그인 테스트하기
 	groups, err := api.GetGroups(false)
 	if err != nil {
-		fmt.Printf("%s 로그인 중 에러가 발생하였습니다. : %s\n", groups, err)
+		log.Printf("%s 로그인 중 에러가 발생하였습니다. : %s\n", groups, err)
 		return 0
 	}
 
 	// 2. 메시지 받기
 
 	go slackListener.ListenAndResponse(tweetenv)
+
+	go slackListener.PostByTime()
 
 	//rtm := api.NewRTM()
 	//go rtm.ManageConnection()
@@ -113,11 +115,8 @@ func _main(args []string) int {
 
 func (s *SlackListener) ListenAndResponse(tweetenv twitterConfig) {
 	rtm := s.client.NewRTM()
-
-	// Start listening slack events
 	go rtm.ManageConnection()
 
-	// Handle slack events
 	for msg := range rtm.IncomingEvents {
 
 		switch ev := msg.Data.(type) {
@@ -132,8 +131,6 @@ func (s *SlackListener) ListenAndResponse(tweetenv twitterConfig) {
 func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twitterConfig) error {
 
 	receivedMsg := ev.Msg.Text
-
-	fmt.Println(receivedMsg)
 
 	// 다른 채널에 쳤을때
 	if ev.Channel != s.channelID {
@@ -288,58 +285,113 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 		}
 
-		return nil
-	}
+		//git 사용자이름 입력시
 
-	attachment := slack.Attachment{
+		if strings.HasPrefix(receivedMsg, "git") {
+			id := receivedMsg[strings.Index(receivedMsg, " ")+1:]
+			strings.TrimSpace(id)
 
-		Text:       "오늘의 핫한 소식들 듣고 가실래요? :newspaper: ",
-		Color:      "#f9a41b",
-		CallbackID: "news",
-		Actions: []slack.AttachmentAction{
+			log.Print(id)
+			// 사용자가 커밋을 하지 않았을 경우
+			if !getGitCommit(id) {
 
-			{
+				attachment := slack.Attachment{
 
-				Name: actionSelect,
-				Type: "select",
+					Color:     "#e20000",
+					Title:     id + "님께서는 아직 커밋하신 적이 없습니다!",
+					TitleLink: "https://github.com/" + id,
+					Text:      "내용을 확인 해 주세요",
+				}
 
-				Options: []slack.AttachmentActionOption{
+				params := slack.PostMessageParameters{
 
-					{
-						Text:  "IT News",
-						Value: "IT News",
+					Attachments: []slack.Attachment{
+						attachment,
 					},
-					{
-						Text:  "OKKY",
-						Value: "OKKY",
+				}
+
+				s.client.PostMessage(ev.Channel, "", params)
+
+			} else {
+
+				attachment := slack.Attachment{
+
+					Color:     "#e20000",
+					Title:     id + "님께서는 오늘 커밋을 했습니다!",
+					TitleLink: "https://github.com/" + id,
+					Text:      "앞으로도 수고해 주세요",
+				}
+
+				params := slack.PostMessageParameters{
+
+					Attachments: []slack.Attachment{
+						attachment,
 					},
-					{
-						Text:  "Go opensource",
-						Value: "Go opensource",
-					},
-					{
-						Text:  "BLOG",
-						Value: "BLOG",
-					},
-					{
-						Text:  "TWITTER",
-						Value: "TWITTER",
+				}
+
+				s.client.PostMessage(ev.Channel, "", params)
+			}
+		}
+
+	} else {
+
+		attachment := slack.Attachment{
+
+			Text:       "오늘의 핫한 소식들 듣고 가실래요? :newspaper: ",
+			Color:      "#f9a41b",
+			CallbackID: "news",
+			Actions: []slack.AttachmentAction{
+
+				{
+
+					Name: actionSelect,
+					Type: "select",
+
+					Options: []slack.AttachmentActionOption{
+
+						{
+							Text:  "IT News",
+							Value: "IT News",
+						},
+						{
+							Text:  "OKKY",
+							Value: "OKKY",
+						},
+						{
+							Text:  "Go opensource",
+							Value: "Go opensource",
+						},
+						{
+							Text:  "BLOG",
+							Value: "BLOG",
+						},
+						{
+							Text:  "TWITTER",
+							Value: "TWITTER",
+						},
 					},
 				},
 			},
-		},
-	}
+		}
 
-	params := slack.PostMessageParameters{
+		params := slack.PostMessageParameters{
 
-		Attachments: []slack.Attachment{
-			attachment,
-		},
-	}
+			Attachments: []slack.Attachment{
+				attachment,
+			},
+		}
 
-	if _, _, err := s.client.PostMessage(ev.Channel, "", params); err != nil {
-		return fmt.Errorf("failed to post message: %s", err)
+		if _, _, err := s.client.PostMessage(ev.Channel, "", params); err != nil {
+			return fmt.Errorf("failed to post message: %s", err)
+		}
+
 	}
 
 	return nil
+}
+
+func (s *SlackListener) PostByTime() {
+
+	fmt.Println("시간별 전송용")
+
 }

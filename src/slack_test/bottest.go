@@ -382,6 +382,30 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 			s.client.PostMessage(ev.Channel, "", params)
 		}
 
+		if strings.Contains(receivedMsg, "도움") {
+
+			attachment := slack.Attachment{
+
+				Color: "#296346",
+				Title: "봇 사용 커맨드",
+				Text: `안녕하세요? IT봇입니다.\n
+				IT봇 사용을 위해서 참고해주세요~\n
+				1. @it_trend_go3 으로 IT봇에게 멘션하면 커맨드를 선택할 수 있습니다.\n
+				2. 기사, 뉴스, 소식 키워드 입력 시 오늘의 IT 뉴스라인을 보실 수 있습니다.\n
+				3. 오키, 옼희 입력 시 오키 주간 기술 트렌드를 보실 수 있습니다.\n
+				4. 트위터, 트윗 입력 시 기술 트위터를 크롤링해 옵니다.\n
+				5. git 사용자id(Ex - git hero0926) 입력 시 오늘의 커밋상황을 안내해 드립니다.\n
+				6. 근무자 입력 시 현재 슬랙에 로그인 해 있는 사용자를 안내해 드립니다.`,
+			}
+			params := slack.PostMessageParameters{
+				Attachments: []slack.Attachment{
+					attachment,
+				},
+			}
+			s.client.PostMessage(ev.Channel, "", params)
+
+		}
+
 		// 무슨 기능을 만들지...???
 
 		return nil
@@ -468,6 +492,67 @@ func (s *SlackListener) PostByTime(env envConfig) {
 			}
 			s.client.PostMessage(env.ChannelID, "", params)
 
+		case 14:
+			if getGitCommit("hero0926") {
+				attachment := slack.Attachment{
+
+					Color:      "#635129",
+					AuthorName: "Commit-bot",
+					Title:      "아직 한 커밋이 없어요!",
+				}
+				params := slack.PostMessageParameters{
+					Attachments: []slack.Attachment{
+						attachment,
+					},
+				}
+				s.client.PostMessage(env.ChannelID, "<@U6DKDJMPV>", params)
+			}
+		case 15:
+			if getGitCommit("hero0926") {
+				attachment := slack.Attachment{
+
+					Color:      "#633f29",
+					AuthorName: "Commit-bot",
+					Title:      "아직도! 한 커밋이 없어요!",
+				}
+				params := slack.PostMessageParameters{
+					Attachments: []slack.Attachment{
+						attachment,
+					},
+				}
+				s.client.PostMessage(env.ChannelID, "<@U6DKDJMPV>", params)
+			}
+		case 16:
+			if getGitCommit("hero0926") {
+				attachment := slack.Attachment{
+
+					Color:      "#632b29",
+					AuthorName: "Commit-bot",
+					Title:      "아직!!!!!!! 한개도 커밋이 없어요!",
+				}
+				params := slack.PostMessageParameters{
+					Attachments: []slack.Attachment{
+						attachment,
+					},
+				}
+				s.client.PostMessage(env.ChannelID, "<@U6DKDJMPV>", params)
+			}
+		case 17:
+			if getGitCommit("hero0926") {
+				attachment := slack.Attachment{
+
+					Color:      "#680e0e",
+					AuthorName: "Commit-bot",
+					Title:      "Commit-bot is watching your commit... PLZ commit soon...",
+				}
+				params := slack.PostMessageParameters{
+					Attachments: []slack.Attachment{
+						attachment,
+					},
+				}
+				s.client.PostMessage(env.ChannelID, "<@U6DKDJMPV>", params)
+			}
+
 		case 18:
 			attachment := slack.Attachment{
 
@@ -481,6 +566,7 @@ func (s *SlackListener) PostByTime(env envConfig) {
 					attachment,
 				},
 			}
+
 			s.client.PostMessage(env.ChannelID, "", params)
 
 		case 19, 20, 21:

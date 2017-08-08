@@ -92,7 +92,7 @@ func _main(args []string) int {
 		return 0
 	}
 
-	// 2. 메시지 받기
+	// 2. 메시지 받는 설정
 
 	go slackListener.ListenAndResponse(tweetenv)
 	go slackListener.PostByTime(env)
@@ -111,6 +111,7 @@ func _main(args []string) int {
 
 }
 
+// 메시지 받는 기능
 func (s *SlackListener) ListenAndResponse(tweetenv twitterConfig) {
 	rtm := s.client.NewRTM()
 	go rtm.ManageConnection()
@@ -120,12 +121,14 @@ func (s *SlackListener) ListenAndResponse(tweetenv twitterConfig) {
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
 			if err := s.handleMessageEvent(ev, tweetenv); err != nil {
+
 				log.Printf("[ERROR] 처리중 에러가 발생하였습니다.: %s", err)
 			}
 		}
 	}
 }
 
+// 메시지 받고 보내기
 func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twitterConfig) error {
 
 	receivedMsg := ev.Msg.Text
@@ -146,6 +149,8 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 			log.Println("봇이 한 대화라 무시 했어요.")
 			return nil
 		}
+
+		// 1. 기사 찾기
 
 		if strings.Contains(receivedMsg, "기사") || strings.Contains(receivedMsg, "뉴스") || strings.Contains(receivedMsg, "소식") {
 
@@ -173,7 +178,7 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 			}
 		}
 
-		// 다. OKKY 입력 시
+		// 2. 오키 게시글 찾기
 
 		if strings.Contains(receivedMsg, "오키") || strings.Contains(receivedMsg, "옼희") {
 
@@ -234,7 +239,7 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 			}
 		*/
-		// 마. 트위터 입력 시
+		// 3. 트위터 찾기
 
 		if strings.Contains(receivedMsg, "트윗") || strings.Contains(receivedMsg, "트위터") {
 
@@ -301,7 +306,7 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 			}
 		*/
 
-		//git 사용자이름 입력시
+		// 4. git 사용자이름 입력 시, 오늘의 깃허브 커밋여부 반환
 
 		if strings.HasPrefix(receivedMsg, "git") {
 
@@ -350,6 +355,33 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 			}
 		}
 
+		// 5. 근무자 입력 시, 현재 슬랙에 로그인 해 있는 상태인 사용자 반환
+
+		if strings.Contains(receivedMsg, "근무자") {
+
+			Users, _ := s.client.GetUsers()
+			var logineduser []string
+
+			for _, v := range Users {
+				if v.Presence == "active" && v.IsBot == false {
+					logineduser = append(logineduser, v.Name)
+				}
+			}
+
+			attachment := slack.Attachment{
+
+				Color: "#292963",
+				Title: "현재 로그인 해 있는 사용자",
+				Text:  strings.Join(logineduser, "\n"),
+			}
+			params := slack.PostMessageParameters{
+				Attachments: []slack.Attachment{
+					attachment,
+				},
+			}
+			s.client.PostMessage(ev.Channel, "", params)
+		}
+
 		// 무슨 기능을 만들지...???
 
 		return nil
@@ -363,7 +395,7 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 		attachment := slack.Attachment{
 
-			Text:       "오늘의 핫한 소식들 듣고 가실래요? :newspaper: ",
+			Text:       "무엇을 도와드릴까요? :newspaper: ",
 			Color:      "#f9a41b",
 			CallbackID: "news",
 			Actions: []slack.AttachmentAction{
@@ -376,24 +408,20 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 					Options: []slack.AttachmentActionOption{
 
 						{
-							Text:  "IT News",
-							Value: "IT News",
+							Text:  "IT 기사 읽기",
+							Value: "ITNews",
 						},
 						{
 							Text:  "OKKY",
 							Value: "OKKY",
 						},
 						{
-							Text:  "Go opensource",
-							Value: "Go opensource",
-						},
-						{
-							Text:  "BLOG",
-							Value: "BLOG",
-						},
-						{
 							Text:  "TWITTER",
 							Value: "TWITTER",
+						},
+						{
+							Text:  "도움말",
+							Value: "HELP",
 						},
 					},
 				},
@@ -454,6 +482,33 @@ func (s *SlackListener) PostByTime(env envConfig) {
 				},
 			}
 			s.client.PostMessage(env.ChannelID, "", params)
+
+		case 19, 20, 21:
+
+			Users, _ := s.client.GetUsers()
+			var logineduser []string
+
+			for _, v := range Users {
+				if v.Presence == "active" && v.IsBot == false {
+					logineduser = append(logineduser, v.Name)
+				}
+			}
+
+			attachment := slack.Attachment{
+
+				Color:      "#63294e",
+				Pretext:    "아직 불철주야 일하고 계신 분",
+				AuthorName: "현재 근무자",
+				Title:      strings.Join(logineduser, "\n"),
+				Text:       "님께서" + string(hour) + "시까지 수고해주시고 계십니다.",
+			}
+			params := slack.PostMessageParameters{
+				Attachments: []slack.Attachment{
+					attachment,
+				},
+			}
+			s.client.PostMessage(env.ChannelID, "", params)
+
 		}
 
 	}
@@ -461,6 +516,13 @@ func (s *SlackListener) PostByTime(env envConfig) {
 }
 
 // 정시 얻기
+
+/*
+이걸 활용해서 매일 n시에 기사 크롤링을 해온 후 저장해 뒀다 선별해서 보여줄 수도 있고
+이걸 활용해서 매일 n시에 사용자의 작업을 확인한 후 메시지를 보내 줄 수도 있을 것 같음
+또는 주변 맛집을 찾아다가 점심시간에 투표 포스팅을 할 수도 있음
+*/
+
 func GetHour() *time.Ticker {
 	c := make(chan time.Time, 1)
 	t := &time.Ticker{C: c}

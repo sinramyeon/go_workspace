@@ -6,3 +6,4 @@ pkg/
 /src/sourcegraph.com/
 *.exe
 *env.go
+/src/slack_test/

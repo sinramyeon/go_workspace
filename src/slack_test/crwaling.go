@@ -16,6 +16,7 @@ https://github.com/PuerkitoBio/goquery
 package main
 
 import (
+	"log"
 	"strings"
 
 	"math/rand"
@@ -95,14 +96,11 @@ func GetUserTweets(many int, id string, client *twitter.Client) []twitter.Tweet 
 
 }
 
+// 갑자기 null값 보냄
 // rss 블로그 읽기
 func RssScrape() map[string]string {
 
-	defer func() {
-		if err := recover(); err != nil {
-			return
-		}
-	}()
+	log.Println("RssScrape")
 
 	rssURL := []string{
 		"https://charsyam.wordpress.com/feed/",
@@ -261,13 +259,19 @@ func RssScrape() map[string]string {
 
 	for i := 0; i < 4; i++ {
 
+		//rssURL 중 하나를 골라다
 		choosen := rssURL[rand.Intn(len(rssURL)-1)]
 
+		//파징 하기
 		fp := gofeed.NewParser()
-		feed, _ := fp.ParseURL(choosen)
+		feed, err := fp.ParseURL(choosen)
+
+		log.Println("???????", feed, err)
 
 		rsslist[feed.Items[0].Title] = feed.Items[0].Link
 	}
+
+	log.Println("rsslist : ", rsslist)
 
 	return rsslist
 
@@ -303,6 +307,7 @@ func OkkyScrape() map[string]string {
 
 }
 
+// 갑자기 null값 보냄
 // 깃허브 고 오픈소스 찾기
 func GoScrape() map[string]string {
 

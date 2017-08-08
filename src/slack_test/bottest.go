@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/nlopes/slack"
 )
@@ -94,7 +95,7 @@ func _main(args []string) int {
 	// 2. 메시지 받기
 
 	go slackListener.ListenAndResponse(tweetenv)
-	go slackListener.PostByTime()
+	go slackListener.PostByTime(env)
 
 	// 서버를 생성하면 그 주소로 설정하면 됩니다(버튼 클릭 액션을 받아올 때 사용)
 	http.Handle("/interaction", interactionHandler{
@@ -135,16 +136,20 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 		return nil
 	}
 
+	log.Println("유저 입력 : ", receivedMsg)
+
 	// 봇에게 한 멘션이 아닐 때
 	if !(strings.HasPrefix(receivedMsg, fmt.Sprintf("<@%s> ", s.botID))) {
 
 		// 봇이 한 말이면 무시하자!
-		if strings.Contains(ev.Msg.BotID, "itbotkor") {
+		if strings.Contains(ev.Msg.Username, "ITBOT") {
+			log.Println("봇이 한 대화라 무시 했어요.")
 			return nil
 		}
 
 		if strings.Contains(receivedMsg, "기사") || strings.Contains(receivedMsg, "뉴스") || strings.Contains(receivedMsg, "소식") {
 
+			log.Println("기사 크롤링 시.")
 			m := NewsScrape()
 
 			for k, v := range m {
@@ -172,6 +177,7 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 		if strings.Contains(receivedMsg, "오키") || strings.Contains(receivedMsg, "옼희") {
 
+			log.Println("오키 크롤링 시.")
 			m := OkkyScrape()
 
 			for k, v := range m {
@@ -197,38 +203,46 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 		}
 
 		// 라. 블로그 입력 시(RSS)
+		/*
+			if strings.Contains(receivedMsg, "블로그") {
 
-		if strings.Contains(receivedMsg, "블로그") {
+				log.Println("블로그 크롤링 시.")
 
-			m := RssScrape()
+				m := RssScrape()
 
-			for k, v := range m {
+				log.Println(m)
 
-				attachment := slack.Attachment{
+				for k, v := range m {
 
-					Color: "#2a4f2e",
-					Title: k,
-					Text:  v,
+					attachment := slack.Attachment{
+
+						Color: "#2a4f2e",
+						Title: k,
+						Text:  v,
+					}
+
+					params := slack.PostMessageParameters{
+
+						Attachments: []slack.Attachment{
+							attachment,
+						},
+					}
+
+					s.client.PostMessage(ev.Channel, "", params)
+
 				}
-
-				params := slack.PostMessageParameters{
-
-					Attachments: []slack.Attachment{
-						attachment,
-					},
-				}
-
-				s.client.PostMessage(ev.Channel, "", params)
 
 			}
-
-		}
-
+		*/
 		// 마. 트위터 입력 시
 
 		if strings.Contains(receivedMsg, "트윗") || strings.Contains(receivedMsg, "트위터") {
 
+			log.Println("트위터 크롤링 시.")
+
 			m := TwitterScrape(tweetenv)
+
+			log.Println(m)
 
 			for k, v := range m {
 
@@ -251,40 +265,47 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 		}
 
 		// 바. 깃허브 입력 시(최신유행 GO 오픈소스 찾기)
+		/*
+			if strings.Contains(receivedMsg, "깃허브") || strings.Contains(receivedMsg, "깃헙") {
 
-		if strings.Contains(receivedMsg, "깃허브") || strings.Contains(receivedMsg, "깃헙") {
+				log.Println("깃허브 크롤링 시.")
 
-			m := GoScrape()
+				m := GoScrape()
 
-			for k, v := range m {
+				log.Println(m)
 
-				title := strings.TrimPrefix(k, "/")
-				title_link := "https://github.com" + strings.TrimSpace(k)
+				for k, v := range m {
 
-				attachment := slack.Attachment{
+					title := strings.TrimPrefix(k, "/")
+					title_link := "https://github.com" + strings.TrimSpace(k)
 
-					Color:     "#f7b7ce",
-					Title:     title,
-					TitleLink: title_link,
-					Text:      v,
+					attachment := slack.Attachment{
+
+						Color:     "#f7b7ce",
+						Title:     title,
+						TitleLink: title_link,
+						Text:      v,
+					}
+
+					params := slack.PostMessageParameters{
+
+						Attachments: []slack.Attachment{
+							attachment,
+						},
+					}
+
+					s.client.PostMessage(ev.Channel, "", params)
+
 				}
-
-				params := slack.PostMessageParameters{
-
-					Attachments: []slack.Attachment{
-						attachment,
-					},
-				}
-
-				s.client.PostMessage(ev.Channel, "", params)
 
 			}
-
-		}
+		*/
 
 		//git 사용자이름 입력시
 
 		if strings.HasPrefix(receivedMsg, "git") {
+
+			log.Println("깃 커밋 확인 시.")
 			id := receivedMsg[strings.Index(receivedMsg, " ")+1:]
 			strings.TrimSpace(id)
 
@@ -329,7 +350,16 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 			}
 		}
 
-	} else {
+		// 무슨 기능을 만들지...???
+
+		return nil
+
+	}
+	// 봇에게 멘션 했을 시
+
+	if strings.HasPrefix(receivedMsg, fmt.Sprintf("<@%s> ", s.botID)) {
+
+		log.Println("봇에게 멘션했을 시.")
 
 		attachment := slack.Attachment{
 
@@ -383,13 +413,65 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 	}
 
+	log.Println("return nil")
 	return nil
 }
 
-func (s *SlackListener) PostByTime() {
+// 시간별로 채널에 메세지 보내기
+func (s *SlackListener) PostByTime(env envConfig) {
 
-	for {
-		// 정시 알림을 보내고 싶다....
+	for n := range GetHour().C {
+
+		hour, _, _ := n.Clock()
+
+		switch hour {
+		case 12:
+			attachment := slack.Attachment{
+
+				Color:      "#a470e0",
+				AuthorName: "점심알림",
+				Title:      "점심 식사 하시러 갈 시간입니다!",
+				Text:       "오늘도 맛있는 점심 되세요.",
+			}
+			params := slack.PostMessageParameters{
+				Attachments: []slack.Attachment{
+					attachment,
+				},
+			}
+			s.client.PostMessage(env.ChannelID, "", params)
+
+		case 18:
+			attachment := slack.Attachment{
+
+				Color:      "#ff0033",
+				AuthorName: "퇴근알림",
+				Title:      "퇴근 할 시간입니다!",
+				Text:       "오늘도 수고하셨어요.",
+			}
+			params := slack.PostMessageParameters{
+				Attachments: []slack.Attachment{
+					attachment,
+				},
+			}
+			s.client.PostMessage(env.ChannelID, "", params)
+		}
+
 	}
 
+}
+
+// 정시 얻기
+func GetHour() *time.Ticker {
+	c := make(chan time.Time, 1)
+	t := &time.Ticker{C: c}
+	go func() {
+		for {
+			n := time.Now()
+			if n.Second() == 0 && n.Minute() == 0 {
+				c <- n
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+	return t
 }

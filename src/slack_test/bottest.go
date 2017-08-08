@@ -21,6 +21,7 @@ const (
 	actionSelect = "select"
 	actionStart  = "start"
 	actionCancel = "cancel"
+	buttonSelect = "button"
 )
 
 type envConfig struct {
@@ -359,6 +360,7 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 		if strings.Contains(receivedMsg, "근무자") {
 
+			log.Println("현재 로그인 해 있는 사용자 확인 시")
 			Users, _ := s.client.GetUsers()
 			var logineduser []string
 
@@ -383,18 +385,20 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 		}
 
 		if strings.Contains(receivedMsg, "도움") {
+			log.Println("도움말!")
 
 			attachment := slack.Attachment{
 
 				Color: "#296346",
 				Title: "봇 사용 커맨드",
-				Text: `안녕하세요? IT봇입니다.\n
-				IT봇 사용을 위해서 참고해주세요~\n
-				1. @it_trend_go3 으로 IT봇에게 멘션하면 커맨드를 선택할 수 있습니다.\n
-				2. 기사, 뉴스, 소식 키워드 입력 시 오늘의 IT 뉴스라인을 보실 수 있습니다.\n
-				3. 오키, 옼희 입력 시 오키 주간 기술 트렌드를 보실 수 있습니다.\n
-				4. 트위터, 트윗 입력 시 기술 트위터를 크롤링해 옵니다.\n
-				5. git 사용자id(Ex - git hero0926) 입력 시 오늘의 커밋상황을 안내해 드립니다.\n
+				Text: `안녕하세요? IT봇입니다.
+				IT봇 사용을 위해서 참고해주세요~
+				1. @it_trend_go3 도움말 기능(개발중)
+				2. @it_trend_go3 버튼 기능(개발중)
+				2. 기사, 뉴스, 소식 키워드 입력 시 오늘의 IT 뉴스라인을 보실 수 있습니다.
+				3. 오키, 옼희 입력 시 오키 주간 기술 트렌드를 보실 수 있습니다.
+				4. 트위터, 트윗 입력 시 기술 트위터를 크롤링해 옵니다.
+				5. git 사용자id(Ex - git hero0926) 입력 시 오늘의 커밋상황을 안내해 드립니다.
 				6. 근무자 입력 시 현재 슬랙에 로그인 해 있는 사용자를 안내해 드립니다.`,
 			}
 			params := slack.PostMessageParameters{
@@ -406,8 +410,6 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 		}
 
-		// 무슨 기능을 만들지...???
-
 		return nil
 
 	}
@@ -417,50 +419,107 @@ func (s *SlackListener) handleMessageEvent(ev *slack.MessageEvent, tweetenv twit
 
 		log.Println("봇에게 멘션했을 시.")
 
-		attachment := slack.Attachment{
+		if strings.Contains(receivedMsg, "도움") {
 
-			Text:       "무엇을 도와드릴까요? :newspaper: ",
-			Color:      "#f9a41b",
-			CallbackID: "news",
-			Actions: []slack.AttachmentAction{
+			attachment := slack.Attachment{
 
-				{
+				Text:       "무엇을 도와드릴까요? :newspaper: ",
+				Color:      "#f9a41b",
+				CallbackID: "news",
+				Actions: []slack.AttachmentAction{
 
-					Name: actionSelect,
-					Type: "select",
+					{
 
-					Options: []slack.AttachmentActionOption{
+						Name: actionSelect,
+						Type: "select",
 
-						{
-							Text:  "IT 기사 읽기",
-							Value: "ITNews",
-						},
-						{
-							Text:  "OKKY",
-							Value: "OKKY",
-						},
-						{
-							Text:  "TWITTER",
-							Value: "TWITTER",
-						},
-						{
-							Text:  "도움말",
-							Value: "HELP",
+						Options: []slack.AttachmentActionOption{
+
+							{
+								Text:  "IT 기사 읽기",
+								Value: "ITNews",
+							},
+							{
+								Text:  "OKKY",
+								Value: "OKKY",
+							},
+							{
+								Text:  "TWITTER",
+								Value: "TWITTER",
+							},
+							{
+								Text:  "도움말",
+								Value: "HELP",
+							},
 						},
 					},
 				},
-			},
+			}
+
+			params := slack.PostMessageParameters{
+
+				Attachments: []slack.Attachment{
+					attachment,
+				},
+			}
+
+			if _, _, err := s.client.PostMessage(ev.Channel, "", params); err != nil {
+				return fmt.Errorf("failed to post message: %s", err)
+			}
+
 		}
 
-		params := slack.PostMessageParameters{
+		if strings.Contains(receivedMsg, "버튼") {
 
-			Attachments: []slack.Attachment{
-				attachment,
-			},
-		}
+			log.Println("버튼테스트")
 
-		if _, _, err := s.client.PostMessage(ev.Channel, "", params); err != nil {
-			return fmt.Errorf("failed to post message: %s", err)
+			attachment := slack.Attachment{
+
+				Text:       "버튼 테스트",
+				Color:      "#f9a41b",
+				CallbackID: "button",
+				Actions: []slack.AttachmentAction{
+
+					{
+						Name:  "game",
+						Text:  "개발",
+						Type:  "button",
+						Value: "chess",
+					},
+					{
+						Name:  "game",
+						Text:  "테스트",
+						Type:  "button",
+						Value: "chess2",
+					},
+					{
+						Name:  "game",
+						Text:  "누르지마세욧",
+						Type:  "button",
+						Value: "chess3",
+						Style: "danger",
+						Confirm: &slack.ConfirmationField{
+
+							Title:       "ㅠㅠ",
+							Text:        "서버와 연결 후 동작합니다",
+							OkText:      "그래",
+							DismissText: "아니",
+						},
+					},
+				},
+			}
+
+			params := slack.PostMessageParameters{
+
+				Attachments: []slack.Attachment{
+					attachment,
+				},
+			}
+
+			if _, _, err := s.client.PostMessage(ev.Channel, "", params); err != nil {
+				return fmt.Errorf("failed to post message: %s", err)
+			}
+
 		}
 
 	}
@@ -492,8 +551,9 @@ func (s *SlackListener) PostByTime(env envConfig) {
 			}
 			s.client.PostMessage(env.ChannelID, "", params)
 
+			// 시간별 커밋 알림봇 구현
 		case 14:
-			if getGitCommit("hero0926") {
+			if !getGitCommit("hero0926") {
 				attachment := slack.Attachment{
 
 					Color:      "#635129",
@@ -508,7 +568,7 @@ func (s *SlackListener) PostByTime(env envConfig) {
 				s.client.PostMessage(env.ChannelID, "<@U6DKDJMPV>", params)
 			}
 		case 15:
-			if getGitCommit("hero0926") {
+			if !getGitCommit("hero0926") {
 				attachment := slack.Attachment{
 
 					Color:      "#633f29",
@@ -523,7 +583,7 @@ func (s *SlackListener) PostByTime(env envConfig) {
 				s.client.PostMessage(env.ChannelID, "<@U6DKDJMPV>", params)
 			}
 		case 16:
-			if getGitCommit("hero0926") {
+			if !getGitCommit("hero0926") {
 				attachment := slack.Attachment{
 
 					Color:      "#632b29",
@@ -538,7 +598,7 @@ func (s *SlackListener) PostByTime(env envConfig) {
 				s.client.PostMessage(env.ChannelID, "<@U6DKDJMPV>", params)
 			}
 		case 17:
-			if getGitCommit("hero0926") {
+			if !getGitCommit("hero0926") {
 				attachment := slack.Attachment{
 
 					Color:      "#680e0e",
@@ -569,6 +629,7 @@ func (s *SlackListener) PostByTime(env envConfig) {
 
 			s.client.PostMessage(env.ChannelID, "", params)
 
+			// 야근봇 구현
 		case 19, 20, 21:
 
 			Users, _ := s.client.GetUsers()

@@ -14,12 +14,14 @@ const (
 	PullRequestEvent = "PullRequestEvent"
 )
 
+// 유저의 깃허브 커밋 여부를 받아오기
 func getGitCommit(id string) bool {
 
+	// 현재시간 구하기
 	koryear, kormon, kordate := time.Now().Date()
 	loc, _ := time.LoadLocation("Asia/Seoul")
 
-	var commit_array []string
+	var commitArray []string
 
 	// github 연결
 	ctx := context.Background()
@@ -29,6 +31,7 @@ func getGitCommit(id string) bool {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
+	// 유저 이벤트 받기
 	events, _, err := client.Activity.ListEventsPerformedByUser(context.Background(), id, true, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -39,14 +42,15 @@ func getGitCommit(id string) bool {
 		utctime := v.GetCreatedAt()
 		year, month, day := utctime.In(loc).Date()
 
-		// 오늘 한 커밋
+		// 오늘 한 커밋만 고르기
 		if ((v.GetType() == Pushevent) || (v.GetType() == PullRequestEvent)) && ((koryear == year) && (kormon == month) && (kordate == day)) {
 			commitID := v.GetID()
-			commit_array = append(commit_array, commitID)
+			commitArray = append(commitArray, commitID)
 		}
 	}
 
-	if len(commit_array) == 0 {
+	// 커밋이 없으면 false, 있으면 true
+	if len(commitArray) == 0 {
 		return false
 	} else {
 		return true

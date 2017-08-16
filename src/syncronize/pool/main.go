@@ -65,6 +65,8 @@ func main(){
 
 	// sync.Pool 로 할당 후 Get, Put 함수로 사용
 	// sync.Pool{ New : 어쩌구} 로 초기화 함수를 만듦
+	// 수명 주기가 짧은 객체는 풀에 적합하지 않음
+
 	
 
 }

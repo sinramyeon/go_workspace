@@ -7,3 +7,6 @@ pkg/
 *.exe
 *env.go
 /src/slack_test/
+/src/twitter/
+/src/twitter/
+/src/weathertest

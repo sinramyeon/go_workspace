@@ -10,5 +10,8 @@ pkg/
 /src/twitter/
 /src/twitter/
 /src/weathertest
+<<<<<<< HEAD
 /src/goslackbot
+=======
+>>>>>>> f6273400833020fef476eec7f186c81a026f4d73
 /src/GoPlayground

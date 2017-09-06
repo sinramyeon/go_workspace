@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -33,6 +32,9 @@ const UVurl = "http://apis.skplanetx.com/weather/windex/uvindex?version=1&lat=%s
 
 // 미세먼지 주소
 const Pollutionurl = "http://apis.skplanetx.com/weather/dust?version=1&lat=%s&lon=%s"
+
+// 분별날씨 주소
+const Rightnowurl = "http://apis.skplanetx.com/weather/current/minutely?lat=%s&lon=%s&village=&county=&stnid=&city=&version=1"
 
 // Get으로 보낼 리퀘스트에 쓰일 값들
 type WeatherRequest struct {
@@ -97,6 +99,34 @@ type Grid struct {
 	City    string `json:"city"`
 	County  string `json:"county"`
 	Village string `json:"village"`
+}
+
+// 3. 분별 날씨
+type MinWeather struct {
+	Weather Minutely `json:"weather"`
+}
+
+type Minutely struct {
+	Minutely []struct {
+		Station     Station     `json:"station"`
+		Temperature Temperature `json:"temperature"`
+		Sky         Sky         `json:"sky"`
+		Rain        Rain        `json:"rain"`
+	} `json:"minutely"`
+}
+
+type Rain struct {
+	SinceOntime   string `json:"sinceOntime"`
+	SinceMidnight string `json:"sinceMidnight"`
+	Last10min     string `json:"last10min"`
+	Last15min     string `json:"last15min"`
+	Last30min     string `json:"last30min"`
+}
+
+type RightNow struct {
+	Temperature Temperature
+	Sky         Sky
+	Rain        Rain
 }
 
 // 자외선 지수
@@ -303,32 +333,32 @@ func GetTodayUV() map[string]string {
 }
 
 // 오늘 미세먼지
-func GetTodayPollution() map[string]string {
+func IsItRaining() map[string]interface{} {
 
 	jsonStr := CallAPI()
 
-	seocho := fmt.Sprintf(Pollutionurl, "37.508214", "127.056541")
+	seocho := fmt.Sprintf(Rightnowurl, "37.508214", "127.056541")
 	body := ReqWeather(seocho, jsonStr)
 
 	// 받아온 json값을 처리합니다.
-	var pollution Pollution
-	if err := json.Unmarshal(body, &pollution); err != nil {
+	var minweather MinWeather
+	if err := json.Unmarshal(body, &minweather); err != nil {
 		log.Fatal(err)
 	}
 
-	Pollution := make(map[string]string)
-	for _, v := range pollution.Weather.Dust {
+	rightnow := make(map[string]interface{})
 
-		var today = v.Time
+	for _, v := range minweather.Weather.Minutely {
 
-		pos := strings.Index(today, " ")
-		today = today[0:pos]
+		Name := v.Station.Name
 
-		var str = today + "일 " + v.Station.Name
-		Pollution[str] = v.Pm10.Grade + " : " + v.Pm10.Value
+		rightnow[Name] = RightNow{
+			Rain:        v.Rain,
+			Sky:         v.Sky,
+			Temperature: v.Temperature,
+		}
 	}
-
-	return Pollution
+	return rightnow
 }
 
 func main() {
@@ -339,4 +369,6 @@ func main() {
 			return
 		}
 	}()
+
+	IsItRaining()
 }
